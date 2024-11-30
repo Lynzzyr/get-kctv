@@ -11,7 +11,7 @@ from datetime import date
 import os
 import shutil
 
-def save(day: date, loc: str, raw = False):
+def save(day: date, loc: str, processed: bool):
     """
     Save final video to media location. Will use processed broadcast by default.
     """
@@ -20,7 +20,7 @@ def save(day: date, loc: str, raw = False):
     if not os.path.exists(dir):
         os.mkdir(dir)
         if verbose: print(day.strftime("created new directory for %B"))
-    if raw:
+    if processed:
         shutil.copyfile("../downloaded/dl-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))
     else:
         shutil.copyfile("../downloaded/proc-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))

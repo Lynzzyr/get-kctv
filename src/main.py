@@ -6,8 +6,10 @@
 from datetime import date
 from selenium import webdriver
 import argparse
+import ffmpeg
 
 import get
+import marker
 import result
 
 if __name__ == "__main__":
@@ -18,12 +20,13 @@ if __name__ == "__main__":
     parser.add_argument("-sd", "--start_date", type = str, help = "Start date of range in ISO 8601 YYYY-MM-DD, -y will be ignored; use exclusively for getting only one day")
     parser.add_argument("-ed", "--end_date", type = str, help = "End date of range in ISO 8601 YYYY-MM-DD, -y will be ignored")
     parser.add_argument("-l", "--location", type = str, help = "Location of main 'Korean Central Television' show directory", required = True)
-    parser.add_argument("-k", "--keep_existing", action = "store_true", help = "Whether to keep existing broadcast files, defaults to False")
+    parser.add_argument("-ch", "--chapters", action = "store_true", help = "Whether to add chapter marks corresponding to start points of each program, default False")
+    parser.add_argument("-k", "--keep_existing", action = "store_true", help = "Whether to keep existing broadcast files, default False")
     parser.add_argument("-v", "--verbose", action = "store_true", help = "Whether to print verbose messages, default False")
 
     args = parser.parse_args()
 
-    get.verbose = result.verbose = args.v
+    get.verbose = marker.verbose = result.verbose = args.v
     range: bool = bool(args.ed)
 
     ops = webdriver.ChromeOptions()
@@ -49,15 +52,15 @@ if __name__ == "__main__":
     
     get.driver.quit()
 
-    # TODO add processing
+    if args.ch: pass # TODO processing
 
     if range:
         for day in get.get_range(args.sd, args.ed):
-            result.save(day, args.l)
+            result.save(day, args.l, args.ch)
     else:
         if args.sd:
-            result.save(day.fromisoformat(args.sd), args.l)
+            result.save(day.fromisoformat(args.sd), args.l, args.ch)
         else:
-            result.save(get.get_yesterday(), args.l)
+            result.save(get.get_yesterday(), args.l, args.ch)
 
     quit()
