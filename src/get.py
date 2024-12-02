@@ -6,7 +6,7 @@
 """
 General webscraper for searching, accessing, and downloading broadcast archives of Korean Central Television from the KCNA Watch database.
 
-Saves download to a directory named 'downloaded'.
+Saves download to a directory named 'temp'.
 """
 
 from datetime import date, timedelta
@@ -30,17 +30,19 @@ def get_range(start: str, end: str) -> list[date]:
 
     sd = date.fromisoformat(start)
     ed = date.fromisoformat(end) + timedelta(1)
-    return [ start + timedelta(d) for d in range(int((end - start).days)) ]
+    return [ sd + timedelta(d) for d in range(int((ed - sd).days)) ]
 
-def get_broadcast(day: date, rm: bool) -> None:
+def get_broadcast(day: date, rm: bool = True) -> None:
     """
-    Common method to webscrape and download broadcast
+    Common method to webscrape and download broadcast.
+
+    Will save download as 'dl-YYYY-MM-DD.mp4'.
     """
 
     if verbose: print("starting download for: " + day.isoformat())
 
     url_1 = "https://kcnawatch.org/kctv-archive/?start={date}&end={date}".format(date = day.strftime("%d-%m-%Y"))
-    if verbose: print("search url at: " + url_1)
+    if verbose: print("search url: %s" % url_1)
     driver.get(url_1)
 
     url_2 = ""
@@ -49,19 +51,19 @@ def get_broadcast(day: date, rm: bool) -> None:
         if ( op.find_element(By.CLASS_NAME, "broadcast-head").text != "Full Broadcast" ): continue
         url_2 = op.find_element(By.LINK_TEXT, day.strftime("%A %B %d, %Y")).get_attribute("href")
     if not url_2:
-        if verbose: print(day.strftime("archive of %B %d, %Y does not exist, quiting..."))
+        if verbose: print(day.strftime("broadcast of %B %d, %Y does not exist! quiting process"))
         driver.quit()
         quit()
-    if verbose: print("article url at: " + url_2)
+    if verbose: print("article at: %s" % url_2)
     driver.get(url_2)
 
     src = driver.find_element(By.XPATH, "//video[@id = 'bitmovinplayer-video-player']").find_element(By.XPATH, "source").get_attribute("src")
-    if verbose: print("stream at: " + src)
+    if verbose: print("stream at: %s" % src)
 
-    dir = "../downloaded"
+    dir = "../temp"
     if not os.path.exists(dir):
         os.mkdir(dir)
-        if verbose: print("created download directory")
+        if verbose: print("created temp directory")
     file = "{}/dl-{}.mp4".format(dir, day.isoformat())
     try:
         with requests.get(src, stream = True) as res:
@@ -76,7 +78,7 @@ def get_broadcast(day: date, rm: bool) -> None:
     except requests.exceptions.RequestException as e:
         if verbose: print(e)
     
-    if verbose: print("done: " + day.isoformat())
+    if verbose: print("fetched: %s" % day.isoformat())
 
 # Global values
 driver: webdriver.Chrome = None

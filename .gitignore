@@ -1,6 +1,6 @@
 chromedriver-mac-arm64/
 chromedriver-win64/
-downloaded/
+temp/
 
 .DS_Store
 

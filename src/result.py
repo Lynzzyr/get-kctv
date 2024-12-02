@@ -11,7 +11,7 @@ from datetime import date
 import os
 import shutil
 
-def save(day: date, loc: str, processed: bool):
+def save(day: date, loc: str, encoded: bool):
     """
     Save final video to media location. Will use processed broadcast by default.
     """
@@ -20,20 +20,22 @@ def save(day: date, loc: str, processed: bool):
     if not os.path.exists(dir):
         os.mkdir(dir)
         if verbose: print(day.strftime("created new directory for %B"))
-    if processed:
-        shutil.copyfile("../downloaded/dl-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))
+    if encoded:
+        shutil.copyfile("../temp/enc-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))
+        if verbose: print("saved processed broadcast to %s" % dir)
     else:
-        shutil.copyfile("../downloaded/proc-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))
+        shutil.copyfile("../temp/dl-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))
+        if verbose: print("saved raw broadcast to %s" % dir)
 
 def clean():
     """
-    Remove all files in 'downloaded' directory.
+    Remove all files in 'temp' directory.
 
     Use caution when using, only call once files are not needed.
     """
 
-    for fn in os.listdir("../downloaded"):
-        file = os.path.join("../downloaded", fn)
+    for fn in os.listdir("../temp"):
+        file = os.path.join("../temp", fn)
         if os.path.isfile(file): os.remove(file)
     
     if verbose: print("working files cleaned")

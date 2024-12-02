@@ -6,11 +6,19 @@
 from datetime import date
 from selenium import webdriver
 import argparse
-import ffmpeg
 
 import get
 import marker
 import result
+
+# Process broadcast if specified
+def _process(day: date):
+    if args.ch:
+        times: list[str] = marker.search(day)
+        if not times
+        if args.v: print("broadcast processed")
+    else:
+        if args.v: print("processing skipped")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -20,14 +28,13 @@ if __name__ == "__main__":
     parser.add_argument("-sd", "--start_date", type = str, help = "Start date of range in ISO 8601 YYYY-MM-DD, -y will be ignored; use exclusively for getting only one day")
     parser.add_argument("-ed", "--end_date", type = str, help = "End date of range in ISO 8601 YYYY-MM-DD, -y will be ignored")
     parser.add_argument("-l", "--location", type = str, help = "Location of main 'Korean Central Television' show directory", required = True)
-    parser.add_argument("-ch", "--chapters", action = "store_true", help = "Whether to add chapter marks corresponding to start points of each program, default False")
-    parser.add_argument("-k", "--keep_existing", action = "store_true", help = "Whether to keep existing broadcast files, default False")
+    parser.add_argument("-ch", "--chapters", action = "store_false", help = "Whether to add chapter marks corresponding to start points of each program, default True")
+    parser.add_argument("-rm", "--remove_existing", action = "store_false", help = "Whether to remove existing broadcast files, default True")
     parser.add_argument("-v", "--verbose", action = "store_true", help = "Whether to print verbose messages, default False")
 
     args = parser.parse_args()
 
     get.verbose = marker.verbose = result.verbose = args.v
-    range: bool = bool(args.ed)
 
     ops = webdriver.ChromeOptions()
     ops.add_argument("--headless=new")
@@ -40,27 +47,28 @@ if __name__ == "__main__":
             options = ops,
             service = webdriver.ChromeService(executable_path = args.w)
         )
+    
+    if args.v: print("webdriver loaded")
 
-    if range:
+    if args.ed:
         for day in get.get_range(args.sd, args.ed):
             get.get_broadcast(day, args.k)
-    else:
-        if args.sd:
-            get.get_broadcast(date.fromisoformat(args.sd), args.k)
-        else:
-            get.get_broadcast(get.get_yesterday(), args.k)
-    
-    get.driver.quit()
-
-    if args.ch: pass # TODO processing
-
-    if range:
-        for day in get.get_range(args.sd, args.ed):
+            get.driver.quit()
+            _process(day)
             result.save(day, args.l, args.ch)
     else:
+        day: date = None
         if args.sd:
-            result.save(day.fromisoformat(args.sd), args.l, args.ch)
+            day = date.fromisoformat(args.sd)
         else:
-            result.save(get.get_yesterday(), args.l, args.ch)
+            day = get.get_yesterday()
 
+        get.get_broadcast(day, args.k)
+        get.driver.quit()
+        _process(day)
+        result.save(day, args.l, args.ch)
+
+    result.clean()
+
+    if args.v: print("done!")
     quit()
