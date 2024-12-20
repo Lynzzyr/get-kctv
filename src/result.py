@@ -10,22 +10,30 @@ Helper file for final result.
 from datetime import date
 import os
 import shutil
+import pathlib
 
-def save(day: date, loc: str, encoded: bool):
+def save(day: date, loc: str, encoded: bool = True):
     """
     Save final video to media location. Will use processed broadcast by default.
     """
 
-    dir = "{}/{}".format(loc, day.strftime("%Y %m"))
-    if not os.path.exists(dir):
+    # f: str = ""
+    # if encoded:
+    #     f = "../temp/{}-%s.mp4".format("enc")
+    # else:
+    #     f = "../temp/{}-%s.mp4".format("dl")
+
+    f: pathlib.Path = pathlib.Path("../temp/dl-%s.mp4" % day.isoformat())
+
+    dir: pathlib.Path = pathlib.Path("{}/{}".format(loc, day.strftime("%Y %m")))
+
+    if not dir.exists():
         os.mkdir(dir)
         if verbose: print(day.strftime("created new directory for %B"))
-    if encoded:
-        shutil.copyfile("../temp/enc-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))
-        if verbose: print("saved processed broadcast to %s" % dir)
-    else:
-        shutil.copyfile("../temp/dl-%s.mp4" % day.isoformat(), "{}/Full Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d")))
-        if verbose: print("saved raw broadcast to %s" % dir)
+
+    if verbose: print("started upload to destination...")
+    shutil.copyfile(f, pathlib.Path("{}/Broadcast {}.mp4".format(dir, day.strftime("%Y %m %d"))))
+    if verbose: print("saved full broadcast to %s" % dir)
 
 def clean():
     """
@@ -34,8 +42,10 @@ def clean():
     Use caution when using, only call once files are not needed.
     """
 
-    for fn in os.listdir("../temp"):
-        file = os.path.join("../temp", fn)
+    temp: pathlib.Path = pathlib.path("temp")
+
+    for fn in os.listdir(temp):
+        file = temp / fn
         if os.path.isfile(file): os.remove(file)
     
     if verbose: print("working files cleaned")

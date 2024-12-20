@@ -4,3 +4,4 @@ ffmpeg-python >= 0.2.0
 pillow >= 10.0.1
 paddlepaddle >= 2.6.2
 paddleocr >= 2.9.1
+opencv-python >= 4.8.1.78

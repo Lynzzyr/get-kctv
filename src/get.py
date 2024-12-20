@@ -5,8 +5,6 @@
 
 """
 General webscraper for searching, accessing, and downloading broadcast archives of Korean Central Television from the KCNA Watch database.
-
-Saves download to a directory named 'temp'.
 """
 
 from datetime import date, timedelta
@@ -15,6 +13,7 @@ from selenium.webdriver.common.by import By
 import time
 import os
 import requests
+import pathlib
 
 def get_yesterday() -> date:
     """
@@ -34,20 +33,20 @@ def get_range(start: str, end: str) -> list[date]:
 
 def get_broadcast(day: date, rm: bool = True) -> None:
     """
-    Common method to webscrape and download broadcast.
+    Common method to webscrape and download broadcast. Saves download to a directory named 'temp'.
 
     Will save download as 'dl-YYYY-MM-DD.mp4'.
     """
 
     if verbose: print("starting download for: " + day.isoformat())
 
-    url_1 = "https://kcnawatch.org/kctv-archive/?start={date}&end={date}".format(date = day.strftime("%d-%m-%Y"))
+    url_1: str = "https://kcnawatch.org/kctv-archive/?start={date}&end={date}".format(date = day.strftime("%d-%m-%Y"))
     if verbose: print("search url: %s" % url_1)
     driver.get(url_1)
 
-    url_2 = ""
-    list = driver.find_elements(By.CLASS_NAME, "article-desc")
-    for op in list:
+    url_2: str = ""
+    ars: list = driver.find_elements(By.CLASS_NAME, "article-desc")
+    for op in ars:
         if ( op.find_element(By.CLASS_NAME, "broadcast-head").text != "Full Broadcast" ): continue
         url_2 = op.find_element(By.LINK_TEXT, day.strftime("%A %B %d, %Y")).get_attribute("href")
     if not url_2:
@@ -57,18 +56,18 @@ def get_broadcast(day: date, rm: bool = True) -> None:
     if verbose: print("article at: %s" % url_2)
     driver.get(url_2)
 
-    src = driver.find_element(By.XPATH, "//video[@id = 'bitmovinplayer-video-player']").find_element(By.XPATH, "source").get_attribute("src")
+    src: str = driver.find_element(By.XPATH, "//video[@id = 'bitmovinplayer-video-player']").find_element(By.XPATH, "source").get_attribute("src")
     if verbose: print("stream at: %s" % src)
 
-    dir = "../temp"
-    if not os.path.exists(dir):
+    dir: pathlib.Path = pathlib.Path("temp")
+    if not dir.exists():
         os.mkdir(dir)
         if verbose: print("created temp directory")
-    file = "{}/dl-{}.mp4".format(dir, day.isoformat())
+    file: pathlib.Path = dir / ("dl-%s.mp4" % day.isoformat())
     try:
         with requests.get(src, stream = True) as res:
             res.raise_for_status()
-            if os.path.exists(file) and rm:
+            if file.exists() and rm:
                 os.remove(file)
                 if verbose: print("removed existing file")
             with open(file, "wb") as f:

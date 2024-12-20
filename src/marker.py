@@ -31,7 +31,7 @@ def _search_bounds(path: str) -> list[str]:
             .output("pipe:", vframes = "1", format = "image2", vcodec = "png")
             .run(capture_stdout = True, capture_stderr = True)
         )[0])).crop(box))
-        res: list = list(ocr.ocr(img, det = False, cls = False, inv = True)[0][0])
+        res: list = list(ocr.ocr(img, det = False, cls = False)[0][0])
 
         if res[1] >= 0.5:
             txts.append(res[0])
@@ -84,13 +84,15 @@ def encode_chapters(day: date, times: list[int]):
 ss: int = 300 # 5 minutes
 to: int = None
 set: bool = False
-box: tuple[int] = (80, 100, 230, 160) # (30, 90, 230, 190)
+box: tuple[int] = (30, 90, 230, 190) # (80, 100, 230, 160) 
 verbose: bool = False
 
 """
-if not text and failed each time 1 hour after start bound:
+if not text and failed each time 2 hours after start bound:
     end
 if not text and failed each time 30 seconds after last successful check and boolean is true:
+    end
+if video is less than 12 hours:
     end
 check frame every 1 second, check bounding box for text
 if text:
