@@ -54,9 +54,10 @@ if __name__ == "__main__":
     if args.end_date:
         for day in get.get_range(args.start_date, args.end_date):
             get.get_broadcast(day, args.remove_existing)
-            get.driver.quit()
+            # get.driver.quit()
             # _process(day)
             result.save(day, args.location, args.chapters)
+        get.driver.quit()
     else:
         day: date = None
         if args.start_date:
