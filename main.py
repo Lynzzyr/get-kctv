@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     if args.end_date:
         for day in get.get_range(args.start_date, args.end_date):
-            get.get_broadcast(day, args.remove_existing)
+            get.get_broadcast(day, args.location, args.remove_existing)
         get.driver.quit()
     else:
         day: date = None
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         else:
             day = get.get_yesterday()
 
-        get.get_broadcast(day, args.remove_existing)
+        get.get_broadcast(day, args.location, args.remove_existing)
         get.driver.quit()
 
     if args.verbose: print("done!")
