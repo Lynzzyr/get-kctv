@@ -24,8 +24,17 @@ if __name__ == "__main__":
 
     get.verbose = args.verbose
 
+    ops_args: list[str] = [
+        "--headless=new",
+        "disable-infobars",
+        "--disable-extensions",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--no-sandbox"
+    ]
+
     ops = webdriver.ChromeOptions()
-    ops.add_argument("--headless=new")
+    for arg in ops_args: ops.add_argument(arg)
     if not args.webdriver:
         get.driver = webdriver.Chrome(
             options = ops

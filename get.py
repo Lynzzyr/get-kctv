@@ -63,7 +63,7 @@ def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
     if not dir.exists():
         os.mkdir(dir)
         if verbose: print("created new month directory")
-    file: pathlib.Path = dir / day.strftime("Broadcast %Y %m %d")
+    file: pathlib.Path = dir / day.strftime("Broadcast %Y %m %d.mp4")
     try:
         with requests.get(src, stream = True) as res:
             res.raise_for_status()
@@ -71,7 +71,7 @@ def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
                 os.remove(file)
                 if verbose: print("removed existing file")
             with open(file, "wb") as f:
-                if verbose: print("writing...")
+                if verbose: print("writing to %s..." % loc)
                 for chunk in res.iter_content(chunk_size = 1048576):
                     f.write(chunk)
     except requests.exceptions.RequestException as e:
