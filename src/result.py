@@ -12,7 +12,8 @@ import os
 import shutil
 import pathlib
 
-def save(day: date, loc: str, encoded: bool = True):
+# def save(day: date, loc: str, encoded: bool = True):
+def save(day: date, loc: str):
     """
     Save final video to media location. Will use processed broadcast by default.
     """
