@@ -59,7 +59,7 @@ def get_broadcast(day: date, rm: bool = True) -> None:
     src: str = driver.find_element(By.XPATH, "//video[@id = 'bitmovinplayer-video-player']").find_element(By.XPATH, "source").get_attribute("src")
     if verbose: print("stream at: %s" % src)
 
-    dir: pathlib.Path = pathlib.Path("../temp")
+    dir: pathlib.Path = pathlib.Path("temp")
     if not dir.exists():
         os.mkdir(dir)
         if verbose: print("created temp directory")
