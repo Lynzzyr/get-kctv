@@ -31,7 +31,7 @@ def get_range(start: str, end: str) -> list[date]:
     ed = date.fromisoformat(end) + timedelta(1)
     return [ sd + timedelta(d) for d in range(int((ed - sd).days)) ]
 
-def get_broadcast(day: date, rm: bool = True) -> None:
+def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
     """
     Common method to webscrape and download broadcast. Saves download to a directory named 'temp'.
 
@@ -59,11 +59,11 @@ def get_broadcast(day: date, rm: bool = True) -> None:
     src: str = driver.find_element(By.XPATH, "//video[@id = 'bitmovinplayer-video-player']").find_element(By.XPATH, "source").get_attribute("src")
     if verbose: print("stream at: %s" % src)
 
-    dir: pathlib.Path = pathlib.Path("temp")
+    dir: pathlib.Path = pathlib.Path("{}/{}".format(loc, day.strftime("%Y %m")))
     if not dir.exists():
         os.mkdir(dir)
-        if verbose: print("created temp directory")
-    file: pathlib.Path = dir / ("dl-%s.mp4" % day.isoformat())
+        if verbose: print("created new month directory")
+    file: pathlib.Path = dir / day.strftime("Broadcast %Y %m %d")
     try:
         with requests.get(src, stream = True) as res:
             res.raise_for_status()
