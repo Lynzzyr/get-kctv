@@ -50,7 +50,8 @@ if __name__ == "__main__":
     if args.end_date:
         for day in get.get_range(args.start_date, args.end_date):
             if args.verbose: print("PROCESS: BULK from {} to {} | on {}".format(args.start_date, args.end_date, day.isoformat()))
-            get.get_broadcast(day, args.location, args.remove_existing)
+            try: get.get_broadcast(day, args.location, args.remove_existing)
+            except get.NullBroadcastException: continue
         get.driver.quit()
     else:
         day: date = None
@@ -61,7 +62,8 @@ if __name__ == "__main__":
             day = get.get_yesterday()
             if args.verbose: print("PROCESS: SINGLE on yesterday")
 
-        get.get_broadcast(day, args.location, args.remove_existing)
+        try: get.get_broadcast(day, args.location, args.remove_existing)
+        except get.NullBroadcastException: pass
         get.driver.quit()
 
     if args.verbose: print("done!")
