@@ -49,14 +49,17 @@ if __name__ == "__main__":
 
     if args.end_date:
         for day in get.get_range(args.start_date, args.end_date):
+            if args.verbose: print("PROCESS: BULK from {} to {} | on {}".format(args.start_date, args.end_date, day.isoformat()))
             get.get_broadcast(day, args.location, args.remove_existing)
         get.driver.quit()
     else:
         day: date = None
         if args.start_date:
             day = date.fromisoformat(args.start_date)
+            if args.verbose: print("PROCESS: SINGLE on %s" % args.start_date)
         else:
             day = get.get_yesterday()
+            if args.verbose: print("PROCESS: SINGLE on yesterday")
 
         get.get_broadcast(day, args.location, args.remove_existing)
         get.driver.quit()
