@@ -75,7 +75,7 @@ def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
                 if verbose: print("removed existing file")
             with open(file, "wb") as f:
                 if verbose: print("writing to %s..." % loc)
-                for chunk in res.iter_content(chunk_size = 1048576):
+                for chunk in res.iter_content(chunk_size = 4194304):
                     f.write(chunk)
     except requests.exceptions.RequestException as e:
         if verbose: print(e)
