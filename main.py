@@ -6,8 +6,23 @@
 from datetime import date
 from selenium import webdriver
 import argparse
+import asyncio
 
 import get
+
+# Wrapper for get_broadcast
+async def _get(day: date, loc: str, rm: bool):
+    try: get.get_broadcast(day, loc, rm)
+    except get.NullBroadcastException: return
+
+# Main trial process
+async def _attempt(day: date, loc: str, rm: bool):
+    for i in range(3):
+        try:
+            await asyncio.wait_for(_get(day, loc, rm), timeout = 300)
+            break
+        except asyncio.TimeoutError:
+            if args.verbose: print("timed out, restarting... (%s/3)" % i + 1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -50,8 +65,7 @@ if __name__ == "__main__":
     if args.end_date:
         for day in get.get_range(args.start_date, args.end_date):
             if args.verbose: print("PROCESS: BULK from {} to {} | on {}".format(args.start_date, args.end_date, day.isoformat()))
-            try: get.get_broadcast(day, args.location, args.remove_existing)
-            except get.NullBroadcastException: continue
+            asyncio.run(_attempt(day, args.location, args.remove_existing))
         get.driver.quit()
     else:
         day: date = None
@@ -62,8 +76,7 @@ if __name__ == "__main__":
             day = get.get_yesterday()
             if args.verbose: print("PROCESS: SINGLE on yesterday")
 
-        try: get.get_broadcast(day, args.location, args.remove_existing)
-        except get.NullBroadcastException: pass
+        asyncio.run(_attempt(day, args.location, args.remove_existing))
         get.driver.quit()
 
     if args.verbose: print("done!")
