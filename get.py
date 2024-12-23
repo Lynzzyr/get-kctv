@@ -12,9 +12,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
 import os
-import requests
+import aiohttp
 import pathlib
 
+# If there is no full broadcast available
 class NullBroadcastException(Exception):
     def __init__(self, message = None):
         super().__init__(message)
@@ -35,11 +36,9 @@ def get_range(start: str, end: str) -> list[date]:
     ed = date.fromisoformat(end) + timedelta(1)
     return [ sd + timedelta(d) for d in range(int((ed - sd).days)) ]
 
-def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
+async def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
     """
-    Common method to webscrape and download broadcast. Saves download to a directory named 'temp'.
-
-    Will save download as 'dl-YYYY-MM-DD.mp4'.
+    Common method to webscrape and download broadcast. Saves download to specified directory.
     """
 
     if verbose: print("starting download for: " + day.isoformat())
@@ -67,20 +66,21 @@ def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
         os.mkdir(dir)
         if verbose: print("created new month directory")
     file: pathlib.Path = dir / day.strftime("Broadcast %Y %m %d.mp4")
-    try:
-        with requests.get(src, stream = True) as res:
-            res.raise_for_status()
-            if file.exists() and rm:
-                os.remove(file)
-                if verbose: print("removed existing file")
-            with open(file, "wb") as f:
-                if verbose: print("writing to %s..." % loc)
-                for chunk in res.iter_content(chunk_size = 4194304):
-                    f.write(chunk)
-    except requests.exceptions.RequestException as e:
-        if verbose: print(e)
+    if file.exists() and rm:
+        os.remove(file)
+        if verbose: print("removed existing file")
     
-    if verbose: print("fetched: %s" % day.isoformat())
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(src) as res:
+                res.raise_for_status()
+                with open(file, "wb") as f:
+                    if verbose: print("writing to %s..." % loc)
+                    async for chunk in res.content.iter_chunked(4194304):
+                        f.write(chunk)
+        if verbose: print("fetched: %s" % day.isoformat())
+    except aiohttp.ClientResponseError:
+        if verbose: print("stream returned null")
 
 # Global values
 driver: webdriver.Chrome = None
