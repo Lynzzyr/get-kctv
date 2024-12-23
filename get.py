@@ -15,6 +15,10 @@ import os
 import requests
 import pathlib
 
+class NullBroadcastException(Exception):
+    def __init__(self, message = None):
+        super().__init__(message)
+
 def get_yesterday() -> date:
     """
     Get day before
@@ -51,8 +55,7 @@ def get_broadcast(day: date, rm: bool = True) -> None:
         url_2 = op.find_element(By.LINK_TEXT, day.strftime("%A %B %d, %Y")).get_attribute("href")
     if not url_2:
         if verbose: print(day.strftime("broadcast of %B %d, %Y does not exist! quiting process"))
-        driver.quit()
-        quit()
+        raise NullBroadcastException
     if verbose: print("article at: %s" % url_2)
     driver.get(url_2)
 
@@ -71,8 +74,8 @@ def get_broadcast(day: date, rm: bool = True) -> None:
                 os.remove(file)
                 if verbose: print("removed existing file")
             with open(file, "wb") as f:
-                if verbose: print("writing...")
-                for chunk in res.iter_content(chunk_size = 1048576):
+                if verbose: print("writing to %s..." % loc)
+                for chunk in res.iter_content(chunk_size = 4194304):
                     f.write(chunk)
     except requests.exceptions.RequestException as e:
         if verbose: print(e)
