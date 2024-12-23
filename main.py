@@ -18,7 +18,7 @@ async def _get(day: date, loc: str, rm: bool):
             except get.NullBroadcastException: pass
             break
         except asyncio.TimeoutError:
-            if args.verbose: print("timed out, restarting... (%s/3)" % i + 1)
+            if args.verbose: print("timed out, restarting... (%s/3)" % str(i + 1))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
