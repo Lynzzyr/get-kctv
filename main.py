@@ -8,6 +8,8 @@ from selenium import webdriver
 import argparse
 import asyncio
 
+import logger
+
 import get
 
 # Main process
@@ -18,7 +20,7 @@ async def _get(day: date, loc: str, rm: bool):
             except get.NullBroadcastException: pass
             break
         except asyncio.TimeoutError:
-            if args.verbose: print("timed out, restarting... (%s/3)" % str(i + 1))
+            if args.verbose: logger.log("timed out, restarting... (%s/3)" % str(i + 1))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -56,24 +58,24 @@ if __name__ == "__main__":
             service = webdriver.ChromeService(executable_path = args.webdriver)
         )
     
-    if args.verbose: print("webdriver loaded")
+    if args.verbose: logger.log("webdriver loaded")
 
     if args.end_date:
         for day in get.get_range(args.start_date, args.end_date):
-            if args.verbose: print("PROCESS: BULK from {} to {} | on {}".format(args.start_date, args.end_date, day.isoformat()))
+            if args.verbose: logger.log("PROCESS: BULK from {} to {} | on {}".format(args.start_date, args.end_date, day.isoformat()))
             asyncio.run(_get(day, args.location, args.remove_existing))
         get.driver.quit()
     else:
         day: date = None
         if args.start_date:
             day = date.fromisoformat(args.start_date)
-            if args.verbose: print("PROCESS: SINGLE on %s" % args.start_date)
+            if args.verbose: logger.log("PROCESS: SINGLE on %s" % args.start_date)
         else:
             day = get.get_yesterday()
-            if args.verbose: print("PROCESS: SINGLE on yesterday")
+            if args.verbose: logger.log("PROCESS: SINGLE on yesterday")
 
         asyncio.run(_get(day, args.location, args.remove_existing))
         get.driver.quit()
 
-    if args.verbose: print("done!")
+    if args.verbose: logger.log("done!")
     quit()
