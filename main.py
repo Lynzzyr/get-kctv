@@ -19,7 +19,7 @@ async def _get(day: date, loc: str, rm: bool):
 async def _attempt(day: date, loc: str, rm: bool):
     for i in range(3):
         try:
-            await asyncio.wait_for(_get(day, loc, rm), timeout = 300)
+            await asyncio.wait_for(_get(day, loc, rm), timeout = 900)
             break
         except asyncio.TimeoutError:
             if args.verbose: print("timed out, restarting... (%s/3)" % i + 1)
