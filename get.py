@@ -12,6 +12,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
 import os
+import asyncio
 import aiohttp
 import pathlib
 
@@ -72,17 +73,23 @@ async def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
         os.remove(file)
         if verbose: logger.log("removed existing file")
     
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(src) as res:
-                res.raise_for_status()
-                with open(file, "wb") as f:
-                    if verbose: logger.log("writing to %s..." % loc)
-                    async for chunk in res.content.iter_chunked(4194304):
-                        f.write(chunk)
-        if verbose: logger.log("fetched: %s" % day.isoformat())
-    except aiohttp.ClientResponseError:
-        if verbose: logger.log("stream returned null")
+    for i in range(3):
+        try:
+            async with aiohttp.ClientSession(timeout = aiohttp.ClientTimeout(total = 1200)) as session: # 20 minute timeout, avg download 10 minutes
+                async with session.get(src) as res:
+                    res.raise_for_status()
+                    with open(file, "wb") as f:
+                        if verbose: logger.log("writing to %s..." % loc)
+                        async for chunk in res.content.iter_chunked(4194304):
+                            f.write(chunk)
+            if verbose: logger.log("fetched: %s" % day.isoformat())
+            break
+        except aiohttp.ClientResponseError:
+            if verbose: logger.log("stream returned null")
+            break
+        except asyncio.TimeoutError:
+            if verbose: logger.log("timed out, retrying... (%s/3)" % str(i + 1))
+            continue
 
 # Global values
 driver: webdriver.Chrome = None
