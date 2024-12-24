@@ -73,7 +73,7 @@ async def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
         if verbose: logger.log("removed existing file")
     
     try:
-        async with aiohttp.ClientSession(timeout = aiohttp.ClientTimeout(total = 1200)) as session: # 20 minute timeout, avg download 10 minutes
+        async with aiohttp.ClientSession(timeout = aiohttp.ClientTimeout(total = 3600)) as session: # timeout is arbitrary
             async with session.get(src) as res:
                 res.raise_for_status()
                 with open(file, "wb") as f:
