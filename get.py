@@ -12,7 +12,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
 import os
-import asyncio
 import aiohttp
 import pathlib
 
