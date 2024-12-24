@@ -66,22 +66,29 @@ async def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
     if not dir.exists():
         os.mkdir(dir)
         if verbose: logger.log("created new month directory")
+        
     file: pathlib.Path = dir / day.strftime("Broadcast %Y %m %d.mp4")
-    if file.exists() and rm:
-        os.remove(file)
-        if verbose: logger.log("removed existing file")
     
-    try:
-        async with aiohttp.ClientSession(timeout = aiohttp.ClientTimeout(total = 3600)) as session: # timeout is arbitrary
-            async with session.get(src) as res:
-                res.raise_for_status()
-                with open(file, "wb") as f:
-                    if verbose: logger.log("writing to %s..." % loc)
-                    async for chunk in res.content.iter_chunked(4194304):
-                        f.write(chunk)
-        if verbose: logger.log("fetched: %s" % day.isoformat())
-    except aiohttp.ClientResponseError:
-        if verbose: logger.log("stream url status not ok!")
+    while True:
+        if file.exists() and rm:
+            os.remove(file)
+            if verbose: logger.log("removed existing file")
+        try:
+            async with aiohttp.ClientSession(timeout = aiohttp.ClientTimeout(total = 3600)) as session: # timeout is arbitrary
+                async with session.get(src) as res:
+                    res.raise_for_status()
+                    with open(file, "wb") as f:
+                        if verbose: logger.log("writing to %s..." % loc)
+                        async for chunk in res.content.iter_chunked(4194304):
+                            f.write(chunk)
+            if verbose: logger.log("fetched: %s" % day.isoformat())
+            break
+        except aiohttp.ClientResponseError:
+            if verbose: logger.log("stream url status not ok!")
+            break
+        except aiohttp.ClientPayloadError:
+            if verbose: logger.log("unexpected payload error, retrying")
+            continue
 
 # Global values
 driver: webdriver.Chrome = None
