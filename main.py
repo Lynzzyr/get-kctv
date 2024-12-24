@@ -6,10 +6,22 @@
 from datetime import date
 from selenium import webdriver
 import argparse
+import asyncio
 
 import logger
 
 import get
+
+# Main process
+async def _get(day: date, loc: str, rm: bool):
+    for i in range(3):
+        try:
+            try: await asyncio.wait_for(get.get_broadcast(day, loc, rm)) # 20 minute timeout, single download avg 10 minutes
+            except get.NullBroadcastException:
+                if args.verbose: logger.log(day.strftime("broadcast of %B %d, %Y does not exist!"))
+            break
+        except asyncio.TimeoutError:
+            if args.verbose: logger.log("timed out, restarting... (%s/3)" % str(i + 1))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -52,7 +64,7 @@ if __name__ == "__main__":
     if args.end_date:
         for day in get.get_range(args.start_date, args.end_date):
             if args.verbose: logger.log("PROCESS: BULK from {} to {} | on {}".format(args.start_date, args.end_date, day.isoformat()))
-            get.get_broadcast(day, args.location, args.remove_existing)
+            asyncio.run(_get(day, args.location, args.remove_existing))
         get.driver.quit()
     else:
         day: date = None
@@ -63,7 +75,7 @@ if __name__ == "__main__":
             day = get.get_yesterday()
             if args.verbose: logger.log("PROCESS: SINGLE on yesterday")
 
-        get.get_broadcast(day, args.location, args.remove_existing)
+        asyncio.run(_get(day, args.location, args.remove_existing))
         get.driver.quit()
 
     if args.verbose: logger.log("done!")

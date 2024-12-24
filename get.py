@@ -56,7 +56,6 @@ async def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
         if ( op.find_element(By.CLASS_NAME, "broadcast-head").text != "Full Broadcast" ): continue
         url_2 = op.find_element(By.LINK_TEXT, day.strftime("%A %B %d, %Y")).get_attribute("href")
     if not url_2:
-        if verbose: logger.log(day.strftime("broadcast of %B %d, %Y does not exist! quiting process"))
         raise NullBroadcastException
     if verbose: logger.log("article at: %s" % url_2)
     driver.get(url_2)
@@ -73,23 +72,17 @@ async def get_broadcast(day: date, loc: str, rm: bool = True) -> None:
         os.remove(file)
         if verbose: logger.log("removed existing file")
     
-    for i in range(3):
-        try:
-            async with aiohttp.ClientSession(timeout = aiohttp.ClientTimeout(total = 1200)) as session: # 20 minute timeout, avg download 10 minutes
-                async with session.get(src) as res:
-                    res.raise_for_status()
-                    with open(file, "wb") as f:
-                        if verbose: logger.log("writing to %s..." % loc)
-                        async for chunk in res.content.iter_chunked(4194304):
-                            f.write(chunk)
-            if verbose: logger.log("fetched: %s" % day.isoformat())
-            break
-        except aiohttp.ClientResponseError:
-            if verbose: logger.log("stream returned null")
-            break
-        except asyncio.TimeoutError:
-            if verbose: logger.log("timed out, retrying... (%s/3)" % str(i + 1))
-            continue
+    try:
+        async with aiohttp.ClientSession(timeout = aiohttp.ClientTimeout(total = 1200)) as session: # 20 minute timeout, avg download 10 minutes
+            async with session.get(src) as res:
+                res.raise_for_status()
+                with open(file, "wb") as f:
+                    if verbose: logger.log("writing to %s..." % loc)
+                    async for chunk in res.content.iter_chunked(4194304):
+                        f.write(chunk)
+        if verbose: logger.log("fetched: %s" % day.isoformat())
+    except aiohttp.ClientResponseError:
+        if verbose: logger.log("stream url status not ok!")
 
 # Global values
 driver: webdriver.Chrome = None
