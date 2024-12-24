@@ -22,6 +22,7 @@ async def _get(day: date, loc: str, rm: bool):
             break
         except asyncio.TimeoutError:
             if args.verbose: logger.log("timed out, restarting... (%s/3)" % str(i + 1))
+            continue
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
